@@ -1,0 +1,10 @@
+{
+  "database": {
+    "dsn": "root:114514@tcp(mysql:3306)/second_hand?parseTime=True&loc=Local&charset=utf8"
+  },
+  "redis": {
+    "addr": "redis:6379",
+    "password": "",
+    "db": 0
+  }
+}
