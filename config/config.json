@@ -6,5 +6,13 @@
     "addr": "redis:6379",
     "password": "",
     "db": 0
+  },
+  "casdoor": {
+    "url": "",
+    "clientId": "",
+    "clientSecret": "",
+    "publicKey": "",
+    "organName": "",
+    "appName": ""
   }
 }

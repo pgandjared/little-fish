@@ -3,12 +3,11 @@ package model
 import "time"
 
 type User struct {
-	Id uint `gorm:"primary_key"`
+	Id uint `gorm:"primary_key;auto_increment"`
 
 	CreateTime time.Time `gorm:"autoCreateTime"`
 	UpdateTime time.Time `gorm:"autoUpdateTime"`
 	DeleteTime time.Time `gorm:"index"`
-
-	Name     string `gorm:"type:varchar(255);unique"`
-	Password string `gorm:"type:varchar(255);not_null"`
+	ExternalId string    `gorm:"type:varchar(255);unique"`
+	Name       string    `gorm:"type:varchar(255);unique"`
 }
