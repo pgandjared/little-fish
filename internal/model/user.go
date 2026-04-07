@@ -10,4 +10,5 @@ type User struct {
 	DeleteTime time.Time `gorm:"index"`
 	ExternalId string    `gorm:"type:varchar(255);unique"`
 	Name       string    `gorm:"type:varchar(255);unique"`
+	Image      string    `gorm:"type:varchar(512)"`
 }

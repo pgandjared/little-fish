@@ -11,7 +11,9 @@ type Product struct {
 	CreateTime  time.Time `gorm:"autoCreateTime"`
 	UpdateTime  time.Time `gorm:"autoUpdateTime"`
 	DeleteTime  time.Time `gorm:"index"`
+	Image       string    `gorm:"type:varchar(512)"`
 }
 type EasyShowProduct struct {
-	Name string
+	Name  string
+	Image string
 }

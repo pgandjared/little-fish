@@ -10,7 +10,7 @@ import (
 	ginprometheus "github.com/zsais/go-gin-prometheus"
 )
 
-func InitRouter(productHandler *handler.ProductHandler) *gin.Engine {
+func InitRouter(productHandler *handler.ProductHandler, orderHandler *handler.OrderHandler, messageHandler *handler.MessageHandler) *gin.Engine {
 	r := gin.Default()
 	//prometheus监控中间件
 	p := ginprometheus.NewPrometheus("gin")
@@ -25,6 +25,16 @@ func InitRouter(productHandler *handler.ProductHandler) *gin.Engine {
 		authGroup.POST("product", productHandler.CreateProduct)
 		authGroup.PUT("product", productHandler.UpdateProduct)
 		authGroup.DELETE("product", productHandler.DeleteProduct)
+
+		// Order routes
+		authGroup.POST("order", orderHandler.CreateOrder)
+		authGroup.GET("order", orderHandler.ListOrders)
+		authGroup.PUT("order/status", orderHandler.UpdateOrderStatus)
+
+		// Message route
+		authGroup.GET("message/history", messageHandler.GetHistory)
+		// WebSocket endpoint
+		authGroup.GET("message/ws", messageHandler.ConnectWS)
 	}
 	return r
 }

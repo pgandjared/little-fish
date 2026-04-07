@@ -21,12 +21,13 @@ type ProductSvc struct {
 func NewProductSvc(repo *repository.ProductRepo, redis *redis.Client) *ProductSvc {
 	return &ProductSvc{Repo: repo, Redisdb: redis}
 }
-func (s *ProductSvc) Create(name, description, userId string, cost uint) error {
+func (s *ProductSvc) Create(name, description, userId string, cost uint, image string) error {
 	product := model.Product{
 		Name:        name,
 		Description: description,
 		Cost:        cost,
 		UserId:      userId,
+		Image:       image,
 	}
 	err := s.Repo.CreateProduct(&product)
 	if err == nil {
@@ -36,12 +37,13 @@ func (s *ProductSvc) Create(name, description, userId string, cost uint) error {
 	return errors.New("product not created")
 }
 
-func (s *ProductSvc) Update(name, description, userId string, id, cost uint) error {
+func (s *ProductSvc) Update(name, description, userId string, id, cost uint, image string) error {
 	product := model.Product{
 		Name:        name,
 		Description: description,
 		Cost:        cost,
 		UserId:      userId,
+		Image:       image,
 	}
 	//userid是否匹配其所有人，匹配则更新
 	getProduct, err := s.Repo.GetIDProduct(id)
@@ -87,7 +89,7 @@ func (s *ProductSvc) List() ([]model.EasyShowProduct, error) {
 		//反序列化为需要格式
 		err = json.Unmarshal([]byte(val), &product)
 		for _, products := range product {
-			listProducts = append(listProducts, model.EasyShowProduct{Name: products.Name})
+			listProducts = append(listProducts, model.EasyShowProduct{Name: products.Name, Image: products.Image})
 		}
 		return listProducts, err
 	}
@@ -99,7 +101,7 @@ func (s *ProductSvc) List() ([]model.EasyShowProduct, error) {
 	data, err := json.Marshal(&product)
 	s.Redisdb.Set(context.Background(), key, data, 10*time.Minute)
 	for _, products := range product {
-		listProducts = append(listProducts, model.EasyShowProduct{Name: products.Name})
+		listProducts = append(listProducts, model.EasyShowProduct{Name: products.Name, Image: products.Image})
 	}
 	return listProducts, nil
 }

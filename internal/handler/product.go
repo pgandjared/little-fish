@@ -42,13 +42,14 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 		Name        string `json:"name" binding:"required"`
 		Description string `json:"description" `
 		Cost        uint   `json:"cost" binding:"required"`
+		Image       string `json:"image" `
 	}
 	err = c.ShouldBindJSON(&Product)
 	if err != nil {
 		c.JSON(401, gin.H{"error": err.Error()})
 		return
 	}
-	err = h.ProductSvc.Create(Product.Name, Product.Description, external, Product.Cost)
+	err = h.ProductSvc.Create(Product.Name, Product.Description, external, Product.Cost, Product.Image)
 	if err != nil {
 		c.JSON(401, gin.H{"error": err.Error()})
 		return
@@ -73,13 +74,14 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 		Description string `json:"description" `
 		Id          uint   `json:"id" binding:"required"`
 		Cost        uint   `json:"cost" binding:"required" `
+		Image       string `json:"image" `
 	}
 	err = c.ShouldBindJSON(&Product)
 	if err != nil {
 		c.JSON(401, gin.H{"error": err.Error()})
 		return
 	}
-	err = h.ProductSvc.Update(Product.Name, Product.Description, external, Product.Id, Product.Cost)
+	err = h.ProductSvc.Update(Product.Name, Product.Description, external, Product.Id, Product.Cost, Product.Image)
 	if err != nil {
 		c.JSON(401, gin.H{"error": err.Error()})
 	}

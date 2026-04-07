@@ -1,11 +1,12 @@
 module second_hand_transaction
 
-go 1.26
+go 1.26.1
 
 require (
 	github.com/casdoor/casdoor-go-sdk v1.45.0
 	github.com/gin-gonic/gin v1.12.0
 	github.com/golang-migrate/migrate/v4 v4.19.1
+	github.com/gorilla/websocket v1.5.3
 	github.com/redis/go-redis/v9 v9.18.0
 	github.com/spf13/viper v1.21.0
 	github.com/zsais/go-gin-prometheus v1.0.3

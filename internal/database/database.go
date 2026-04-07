@@ -24,7 +24,7 @@ func DBInit() *gorm.DB {
 		zap.L().Panic("连接数据库失败" + err.Error())
 	}
 	zap.L().Info("连接数据库成功")
-	DBMigrate("./sql", dsn)
+	DBMigrate("/app/sql", dsn)
 	return DB
 }
 

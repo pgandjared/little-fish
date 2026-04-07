@@ -29,14 +29,24 @@ func main() {
 	//初始化，依赖注入
 	db := database.DBInit()
 	rdb := database.InitRedis()
+	
 	productRepo := repository.NewProductRepo(db)
 	userRepo := repository.NewUserRepo(db)
+	orderRepo := repository.NewOrderRepo(db)
+	messageRepo := repository.NewMessageRepo(db)
+	
 	productSvc := service.NewProductSvc(productRepo, rdb)
 	userSvc := service.NewUserSvc(userRepo)
+	orderSvc := service.NewOrderSvc(orderRepo, productRepo)
+	wsHub := service.NewWsHub(messageRepo)
+	
 	productHandler := handler.NewProductHandler(productSvc, userSvc)
-	r := router.InitRouter(productHandler)
+	orderHandler := handler.NewOrderHandler(orderSvc, userSvc)
+	messageHandler := handler.NewMessageHandler(wsHub, userSvc)
+	
+	r := router.InitRouter(productHandler, orderHandler, messageHandler)
 	zap.L().Info("服务启动，端口8080")
-	err := r.Run("8080")
+	err := r.Run(":8080")
 	if err != nil {
 		zap.L().Panic("http启动失败", zap.Error(err))
 	}
