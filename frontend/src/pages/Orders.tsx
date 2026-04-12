@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Table, Button, Tag, Space, message } from "antd";
 import { get, put } from "../utils/request";
 
@@ -25,8 +25,7 @@ export default function Orders() {
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState<"buyer" | "seller">("buyer");
   
-  // 假设当前登录用户的externalId，在真实环境里从状态库取
-  const currentUserId = "mock_user_1";
+  // 真实环境里从状态库取
 
   const fetchOrders = async () => {
     setLoading(true);

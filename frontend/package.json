@@ -10,8 +10,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "antd": "^6.3.5",
+    "casdoor-js-sdk": "^0.18.0",
+    "casdoor-react-sdk": "^1.2.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^1.8.0",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.14.0",
+    "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
