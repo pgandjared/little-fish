@@ -1,3 +1,5 @@
+//服务创建
+
 package service
 
 import (
@@ -12,55 +14,65 @@ import (
 )
 
 type ProductSvc struct {
-	repo    repository.ProductRepo
-	redisdb *redis.Client
+	Repo    *repository.ProductRepo
+	Redisdb *redis.Client
 }
 
-func NewProductSvc(repo repository.ProductRepo) *ProductSvc {
-	return &ProductSvc{repo: repo}
+func NewProductSvc(repo *repository.ProductRepo, redis *redis.Client) *ProductSvc {
+	return &ProductSvc{Repo: repo, Redisdb: redis}
 }
-func (s *ProductSvc) Create(name, description string, cost, userId uint) error {
+func (s *ProductSvc) Create(name, description, userId string, cost uint, image string) error {
 	product := model.Product{
 		Name:        name,
 		Description: description,
 		Cost:        cost,
 		UserId:      userId,
+		Image:       image,
 	}
-	err := s.repo.CreateProduct(&product)
+	err := s.Repo.CreateProduct(&product)
 	if err == nil {
-		s.redisdb.Del(context.Background(), "product")
+		s.Redisdb.Del(context.Background(), "product")
 		return nil
 	}
 	return errors.New("product not created")
 }
 
-func (s *ProductSvc) Update(name, description string, id, cost, userId uint) error {
+func (s *ProductSvc) Update(name, description, userId string, id, cost uint, image string) error {
 	product := model.Product{
 		Name:        name,
 		Description: description,
 		Cost:        cost,
 		UserId:      userId,
+		Image:       image,
 	}
 	//userid是否匹配其所有人，匹配则更新
-	getProduct, err := s.repo.GetIDProduct(id)
+	getProduct, err := s.Repo.GetIDProduct(id)
 	if err != nil {
+
 		return errors.New("product not found")
 	}
 	if !(userId == getProduct.UserId) {
 		return errors.New("你未持有商品，无法修改")
 	}
 
-	err = s.repo.UpdateProduct(&product)
+	err = s.Repo.UpdateProduct(&product)
 	if err == nil {
-		s.redisdb.Del(context.Background(), "product")
+		s.Redisdb.Del(context.Background(), "product")
 		return nil
 	}
 	return errors.New("product not updated")
 }
-func (s *ProductSvc) Del(id uint) error {
-	err := s.repo.DeleteProduct(id)
+func (s *ProductSvc) Del(userId string, id uint) error {
+	getProduct, err := s.Repo.GetIDProduct(id)
+	if err != nil {
+		return errors.New("product not found")
+	}
+	if !(userId == getProduct.UserId) {
+		return errors.New("你未持有商品，无法修改")
+	}
+	err = s.Repo.DeleteProduct(id)
 	if err == nil {
-		s.redisdb.Del(context.Background(), "product")
+		s.Redisdb.Del(context.Background(), "product")
 		return nil
 	}
 	return errors.New("product not deleted")
@@ -72,31 +84,31 @@ func (s *ProductSvc) List() ([]model.EasyShowProduct, error) {
 	var listProducts []model.EasyShowProduct
 
 	//先从redis查询
-	val, err := s.redisdb.Get(context.Background(), key).Result()
+	val, err := s.Redisdb.Get(context.Background(), key).Result()
 	if err == nil {
 		//反序列化为需要格式
 		err = json.Unmarshal([]byte(val), &product)
 		for _, products := range product {
-			listProducts = append(listProducts, model.EasyShowProduct{Name: products.Name})
+			listProducts = append(listProducts, model.EasyShowProduct{Name: products.Name, Image: products.Image})
 		}
 		return listProducts, err
 	}
-	product, err = s.repo.ListProducts()
+	product, err = s.Repo.ListProducts()
 	if err != nil {
 		return nil, err
 	}
 	//序列化弄入redis
 	data, err := json.Marshal(&product)
-	s.redisdb.Set(context.Background(), key, data, 10*time.Minute)
+	s.Redisdb.Set(context.Background(), key, data, 10*time.Minute)
 	for _, products := range product {
-		listProducts = append(listProducts, model.EasyShowProduct{Name: products.Name})
+		listProducts = append(listProducts, model.EasyShowProduct{Name: products.Name, Image: products.Image})
 	}
 	return listProducts, nil
 }
 func (s *ProductSvc) GetByName(name string) ([]model.Product, error) {
 	var product []model.Product
 	//依旧redis查看命中，使用for range搜索redis查看的所有数据
-	val, err := s.redisdb.Get(context.Background(), "products").Result()
+	val, err := s.Redisdb.Get(context.Background(), "products").Result()
 	if err == nil {
 		err = json.Unmarshal([]byte(val), &product)
 		for _, p := range product {
@@ -108,11 +120,11 @@ func (s *ProductSvc) GetByName(name string) ([]model.Product, error) {
 		}
 	}
 	//未命中redis，从数据库查询并录入redis中
-	product, err = s.repo.GetProduct(name)
+	product, err = s.Repo.GetProduct(name)
 	if err != nil {
 		return nil, err
 	}
 	data, err := json.Marshal(&product)
-	s.redisdb.Set(context.Background(), "products", data, 10*time.Minute)
+	s.Redisdb.Set(context.Background(), "products", data, 10*time.Minute)
 	return product, nil
 }

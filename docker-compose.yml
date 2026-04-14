@@ -1,0 +1,43 @@
+services:
+  mysql:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 114514
+      MYSQL_DATABASE: second_hand
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:alpine
+    restart: always
+    ports:
+      - "6379:6379"
+
+  casdoor:
+    image: casbin/casdoor
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - driverName=mysql
+      # 让 Casdoor 连接到同一个 MySQL 服务实例中
+      - dataSourceName=root:114514@tcp(mysql:3306)/
+    depends_on:
+      - mysql
+
+  api:
+    build: .
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+      - redis
+    # 项目中 config.json 的相关配置已经预设连向了宿主机 "mysql" 和 "redis"
+    # 提醒：在启动并测试前，请务必更新好 config.json 中实际申请到的 Casdoor 相关参数
+
+volumes:
+  mysql_data:
