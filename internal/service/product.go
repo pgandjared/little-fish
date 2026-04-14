@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"second_hand_transaction/internal/model"
 	"second_hand_transaction/internal/repository"
 	"time"
@@ -30,11 +31,11 @@ func (s *ProductSvc) Create(name, description, userId string, cost uint, image s
 		Image:       image,
 	}
 	err := s.Repo.CreateProduct(&product)
-	if err == nil {
-		s.Redisdb.Del(context.Background(), "product")
-		return nil
+	if err != nil {
+		return fmt.Errorf("product not created: %w", err)
 	}
-	return errors.New("product not created")
+	s.Redisdb.Del(context.Background(), "product")
+	return nil
 }
 
 func (s *ProductSvc) Update(name, description, userId string, id, cost uint, image string) error {
@@ -77,21 +78,16 @@ func (s *ProductSvc) Del(userId string, id uint) error {
 	}
 	return errors.New("product not deleted")
 }
-func (s *ProductSvc) List() ([]model.EasyShowProduct, error) {
+func (s *ProductSvc) List() ([]model.Product, error) {
 	key := "products"
 	var product []model.Product
-	//全部展示，只展示名字和图片
-	var listProducts []model.EasyShowProduct
 
 	//先从redis查询
 	val, err := s.Redisdb.Get(context.Background(), key).Result()
 	if err == nil {
 		//反序列化为需要格式
 		err = json.Unmarshal([]byte(val), &product)
-		for _, products := range product {
-			listProducts = append(listProducts, model.EasyShowProduct{Name: products.Name, Image: products.Image})
-		}
-		return listProducts, err
+		return product, err
 	}
 	product, err = s.Repo.ListProducts()
 	if err != nil {
@@ -100,10 +96,7 @@ func (s *ProductSvc) List() ([]model.EasyShowProduct, error) {
 	//序列化弄入redis
 	data, err := json.Marshal(&product)
 	s.Redisdb.Set(context.Background(), key, data, 10*time.Minute)
-	for _, products := range product {
-		listProducts = append(listProducts, model.EasyShowProduct{Name: products.Name, Image: products.Image})
-	}
-	return listProducts, nil
+	return product, nil
 }
 func (s *ProductSvc) GetByName(name string) ([]model.Product, error) {
 	var product []model.Product

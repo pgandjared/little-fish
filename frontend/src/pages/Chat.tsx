@@ -1,137 +1,295 @@
 import { useEffect, useState, useRef } from "react";
-import { Input, Button, List, Card, message } from "antd";
+import { Input, Button, message, Empty, Badge } from "antd";
+import { Send, Wifi, WifiOff, MessageCircle } from "lucide-react";
 import { get } from "../utils/request";
+import { useSearchParams } from "react-router-dom";
+import { casdoorSDK } from "../casdoor";
 
 interface ChatMessage {
   Id?: number;
   SenderId: string;
   ReceiverId: string;
   Content: string;
-  CreateTime?: string;
 }
 
 export default function Chat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
-  const [peerId, setPeerId] = useState("seller_id_001"); // 测试时直接指定一个交互目标Id
-  
+  const [searchParams] = useSearchParams();
+  const [peerId, setPeerId] = useState(searchParams.get("peer") || "");
+  const [peerInput, setPeerInput] = useState(searchParams.get("peer") || "");
+  const [connected, setConnected] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+
   const ws = useRef<WebSocket | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const token = localStorage.getItem("token") || "";
+  let currentUserId = "";
+  if (token) {
+    try {
+      const decoded: any = casdoorSDK.parseAccessToken(token);
+      currentUserId = decoded?.sub || "";
+    } catch {}
+  }
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    // 假设用 token 携带认证
-    const token = localStorage.getItem("token") || "";
-    // 构建 websocket 地址，需根据实际情况修改端口和 host
+    scrollToBottom();
+  }, [messages]);
+
+  // WebSocket连接
+  useEffect(() => {
+    if (!token) return;
+
+    setConnecting(true);
     const wsUrl = `ws://localhost:8080/api/message/ws?token=${token}`;
-    
+
     ws.current = new WebSocket(wsUrl);
     ws.current.onopen = () => {
-      console.log("WS Connected");
-      message.success("聊天服务器连接成功");
+      setConnected(true);
+      setConnecting(false);
     };
     ws.current.onmessage = (event) => {
       try {
         const msg: ChatMessage = JSON.parse(event.data);
-        // 如果是发送给当前对话人的或者对方发来的，才追加到对话框
-        if (msg.SenderId === peerId || msg.ReceiverId === peerId) {
-          setMessages((prev) => [...prev, msg]);
-        }
+        setMessages((prev) => [...prev, msg]);
       } catch (e) {
         console.error("Parse msg error", e);
       }
     };
-    ws.current.onerror = (e) => {
-      console.error("WS Error", e);
+    ws.current.onerror = () => {
+      setConnected(false);
+      setConnecting(false);
+    };
+    ws.current.onclose = () => {
+      setConnected(false);
+      setConnecting(false);
     };
 
     return () => {
       ws.current?.close();
     };
+  }, [token]);
+
+  // 切换对话人时加载历史
+  useEffect(() => {
+    if (peerId) {
+      loadHistory();
+    }
   }, [peerId]);
 
+  // URL参数变化时更新
   useEffect(() => {
-    // 组件启动加载历史记录
-    loadHistory();
-  }, [peerId]);
+    const peer = searchParams.get("peer");
+    if (peer && peer !== peerId) {
+      setPeerId(peer);
+      setPeerInput(peer);
+    }
+  }, [searchParams]);
 
   const loadHistory = async () => {
     try {
       const data = await get<ChatMessage[]>(`/api/message/history?peer_id=${peerId}`);
       if (data) setMessages(data);
+      else setMessages([]);
     } catch (err: any) {
       console.error(err);
+      setMessages([]);
     }
   };
 
   const handleSend = () => {
     if (!inputValue.trim()) return;
-    
+    if (!peerId) {
+      message.warning("请先输入对方的ID");
+      return;
+    }
+
     const payload = {
       receiver_id: peerId,
       content: inputValue,
     };
-    
+
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify(payload));
-      
-      // 自己发出的消息也要加到列表（因为后端 WS 不一定回传给自己）
       setMessages((prev) => [
-        ...prev, 
-        { SenderId: "me", ReceiverId: peerId, Content: inputValue }
+        ...prev,
+        { SenderId: currentUserId, ReceiverId: peerId, Content: inputValue }
       ]);
       setInputValue("");
     } else {
-      message.error("聊天服务未连接");
+      message.error("聊天服务未连接，请刷新页面重试");
     }
   };
 
+  const startChat = () => {
+    if (peerInput.trim()) {
+      setPeerId(peerInput.trim());
+    }
+  };
+
+  const isMine = (msg: ChatMessage) => msg.SenderId === currentUserId;
+
+  if (!token) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+        <Empty description="请先登录后使用聊天功能" />
+      </div>
+    );
+  }
+
   return (
-    <div style={{ padding: 24, display: "flex", gap: "20px" }}>
-      <Card title="通讯服务" style={{ width: 600 }}>
-        <div style={{ marginBottom: 16 }}>
-          <span>对话对方 ID: </span>
-          <Input 
-            value={peerId} 
-            onChange={(e) => setPeerId(e.target.value)} 
-            style={{ width: 200, marginLeft: 8 }}
-          />
-          <Button onClick={loadHistory} style={{ marginLeft: 8 }}>拉取历史</Button>
-        </div>
+    <div style={{ backgroundColor: "#f4f4f4", minHeight: "100vh", padding: "30px 50px" }}>
+      <div style={{ display: "flex", gap: 20, maxWidth: 900, margin: "0 auto" }}>
+        {/* 聊天主区域 */}
+        <div style={{
+          flex: 1,
+          backgroundColor: "#fff",
+          borderRadius: 16,
+          overflow: "hidden",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+          display: "flex",
+          flexDirection: "column",
+          height: "calc(100vh - 140px)"
+        }}>
+          {/* 聊天头部 */}
+          <div style={{
+            padding: "16px 20px",
+            borderBottom: "1px solid #f0f0f0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            backgroundColor: "#fafafa"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <MessageCircle size={20} color="#FF5000" />
+              <span style={{ fontWeight: "bold", fontSize: 16 }}>
+                {peerId ? `与 ${peerId.substring(0, 12)}... 对话` : "消息中心"}
+              </span>
+            </div>
+            <Badge
+              status={connected ? "success" : connecting ? "processing" : "error"}
+              text={
+                <span style={{ fontSize: 12, color: "#999" }}>
+                  {connected ? "已连接" : connecting ? "连接中..." : "未连接"}
+                </span>
+              }
+            />
+          </div>
 
-        <div style={{ height: 400, overflowY: "auto", border: "1px solid #f0f0f0", padding: 16, marginBottom: 16 }}>
-          <List
-            dataSource={messages}
-            renderItem={(item) => {
-              const isMine = item.SenderId === "me" || item.SenderId === localStorage.getItem("external_id");
-              return (
-                <div style={{ textAlign: isMine ? "right" : "left", marginBottom: 12 }}>
-                  <div style={{ fontSize: 12, color: "#999", marginBottom: 4 }}>
-                    {isMine ? "我" : item.SenderId} {item.CreateTime}
-                  </div>
-                  <div style={{ 
-                    display: "inline-block",
-                    padding: "8px 12px", 
-                    background: isMine ? "#1677ff" : "#f5f5f5",
-                    color: isMine ? "#fff" : "#333",
-                    borderRadius: 8
-                  }}>
-                    {item.Content}
-                  </div>
-                </div>
-              );
-            }}
-          />
-        </div>
+          {/* 对话人输入 */}
+          {!peerId && (
+            <div style={{ padding: 20, borderBottom: "1px solid #f0f0f0" }}>
+              <div style={{ fontSize: 14, color: "#666", marginBottom: 8 }}>请输入对方的用户ID开始聊天</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <Input
+                  value={peerInput}
+                  onChange={(e) => setPeerInput(e.target.value)}
+                  onPressEnter={startChat}
+                  placeholder="输入对方ID..."
+                  style={{ borderRadius: 20 }}
+                />
+                <Button type="primary" onClick={startChat} style={{ backgroundColor: "#FF5000", borderRadius: 20 }}>
+                  开始聊天
+                </Button>
+              </div>
+            </div>
+          )}
 
-        <div style={{ display: "flex", gap: 8 }}>
-          <Input 
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onPressEnter={handleSend}
-            placeholder="输入聊天内容..."
-          />
-          <Button type="primary" onClick={handleSend}>发送</Button>
+          {/* 消息区域 */}
+          <div style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "20px",
+            backgroundColor: "#f7f7f8"
+          }}>
+            {messages.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px 0", color: "#bbb" }}>
+                {peerId ? "暂无消息，发送第一条消息吧" : "选择一个对话开始聊天"}
+              </div>
+            ) : (
+              messages.map((msg, index) => {
+                const mine = isMine(msg);
+                return (
+                  <div
+                    key={index}
+                    style={{
+                      display: "flex",
+                      justifyContent: mine ? "flex-end" : "flex-start",
+                      marginBottom: 16
+                    }}
+                  >
+                    <div style={{ maxWidth: "70%" }}>
+                      <div style={{
+                        fontSize: 11,
+                        color: "#bbb",
+                        marginBottom: 4,
+                        textAlign: mine ? "right" : "left"
+                      }}>
+                        {mine ? "我" : msg.SenderId.substring(0, 8) + "..."}
+                      </div>
+                      <div style={{
+                        padding: "10px 16px",
+                        borderRadius: mine ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                        backgroundColor: mine ? "#FF5000" : "#fff",
+                        color: mine ? "#fff" : "#333",
+                        fontSize: 14,
+                        lineHeight: "1.5",
+                        boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+                        wordBreak: "break-word"
+                      }}>
+                        {msg.Content}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* 输入区域 */}
+          {peerId && (
+            <div style={{
+              padding: "12px 20px",
+              borderTop: "1px solid #f0f0f0",
+              backgroundColor: "#fff",
+              display: "flex",
+              gap: 8,
+              alignItems: "center"
+            }}>
+              <Input
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onPressEnter={handleSend}
+                placeholder="输入消息..."
+                style={{ borderRadius: 20, height: 40 }}
+                disabled={!connected}
+              />
+              <Button
+                type="primary"
+                icon={<Send size={16} />}
+                onClick={handleSend}
+                disabled={!connected || !inputValue.trim()}
+                style={{
+                  backgroundColor: "#FF5000",
+                  borderRadius: "50%",
+                  width: 40,
+                  height: 40,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 0
+                }}
+              />
+            </div>
+          )}
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

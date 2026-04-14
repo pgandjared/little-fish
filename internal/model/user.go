@@ -1,14 +1,12 @@
 package model
 
-import "time"
-
 type User struct {
-	Id uint `gorm:"primary_key;auto_increment"`
+	Id         uint   `gorm:"primary_key;auto_increment;column:id"`
+	ExternalId string `gorm:"type:varchar(255);unique;column:external_id"`
+	Name       string `gorm:"type:varchar(255);unique;column:name"`
+	Image      string `gorm:"type:varchar(512);column:image"`
+}
 
-	CreateTime time.Time `gorm:"autoCreateTime"`
-	UpdateTime time.Time `gorm:"autoUpdateTime"`
-	DeleteTime time.Time `gorm:"index"`
-	ExternalId string    `gorm:"type:varchar(255);unique"`
-	Name       string    `gorm:"type:varchar(255);unique"`
-	Image      string    `gorm:"type:varchar(512)"`
+func (User) TableName() string {
+	return "users"
 }

@@ -8,11 +8,11 @@
     "db": 0
   },
   "casdoor": {
-    "url": "",
-    "clientId": "",
-    "clientSecret": "",
-    "publicKey": "",
-    "organName": "",
-    "appName": ""
+    "url": "http://localhost:8000",
+    "clientId": "7ccfa99a1769a710bc02",
+    "clientSecret": "c3f3aa01c23b1be90ce2acf0dbed7f8ecec92e72",
+    "publicKey": "-----BEGIN CERTIFICATE-----\nMIIE3TCCAsWgAwIBAgIDAeJAMA0GCSqGSIb3DQEBCwUAMCgxDjAMBgNVBAoTBWFk\nbWluMRYwFAYDVQQDEw1jZXJ0LWJ1aWx0LWluMB4XDTI2MDQxNDAxNDE1N1oXDTQ2\nMDQxNDAxNDE1N1owKDEOMAwGA1UEChMFYWRtaW4xFjAUBgNVBAMTDWNlcnQtYnVp\nbHQtaW4wggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDXrSghns3tqlEi\n9B9o9jFlzqTxqHz6aebNPhQQ8+oovDmLecfjvSTztyCMB3HRNTzhcNvi0FbqsOh8\nwB22G80USHBnEd5ZH/yvNdpshTFDmu5jDeLYsUCm9ZcktyS/ji5JV65iPehZG6Og\nvEDlCyUXgRRq758hvLRtw01Pt/0r0q/p2DlhkhOzgobdxdi8K+coLyCy8vmEOwbI\nwvfpaOmKu7dc4me2RQMyaj+8aqQZXmzTk141Wd7P3JLqazp3sx0WWojZt6/bTL2F\n78yJ1DlhjLMDi66MKvRJAL3yT8qQot9fNZaOPNBHCTjgDW/gkfCrSy002/Ib1dFy\nZIsEvK3Qw1t+HYbzktzWgAKG0PjhdLp0xdGZAuN8m+YtEiUWK6po1Rd8sNtroolU\nCd56on22gHikxb8+kOfV3A/364dp3pL99IK+Vn6IkNtmcBzgkI8ObERTdoJvTFnw\n/tJRqd6tS6JSrP7vrhMaZX0waNmVorm9UwYAfXMGciHkee6nAguQDuKer+IdP+fM\nqoqChnC64Ha3Tp0nt1y9wt2C44WOUishJl7sFjDc1HDLtcYii++v7ADOcEUviQRj\nswUQoEg7EYg2WpBnmClDWeEKNKvNKNOg2R0JBeNfHjdPV4eJRHygs1czfIS6TQAJ\nKGDYwed4foUAqOGRSmnqcxohur3V7QIDAQABoxAwDjAMBgNVHRMBAf8EAjAAMA0G\nCSqGSIb3DQEBCwUAA4ICAQAnjqAOCA1UrT1mL/qxTtO+n9r6bPJ2ZwlVdB0MZr5h\nt1MZK3+/8QVtSNhMmulwbegxB9yoOGdVb1NynYN+X/9hiN9vYFfx9VMP9pngEO8q\nSxNgdcUoPJ525VZbL8+9gDbQyy0rOhpM09tXQI31HXnUAkgaktX0M66ZgMwUIp/R\nbPWD+J69L7Eozc6vd7V3ZNMxbk0KS6tErFm12n8nryX004tDAwI1FelvFwwAh9Sj\nAQZXcBm/wepn851HAOoAA4yeOhxi2OkQc8s7B+Dd1HgUYK7tPALHgNPRVKxESOlu\nWBfy42C3EQKdF1RSkKXplUlHqOITUebiFXUR50J/c1G95aVmuJQ3I5guEGE5IeKD\nMDlBCjZiTYfW7mKmofV006FQw9aTWWw+WnyGRIJcSTPEZBScPulf0U8ZPaK0+9S3\nZIz8TJ409LfFuupoIER6OF1okobR1JpCbjOR/0Fft0m3jVEDZksK0a0yZdz8Rn4x\nn0zQD6ffpsx2q8SDHItzhEqKWevm/WP88NRvp96/s06Uh6tqbviior3AC4H/bQnK\noduGsH2YiFNiSgRwDwOLYzfLyiXfZo17isPIfFJHm7XUV5AcVb1zr7U1LD97kmPP\ntKz7NJcM71X+iK5PL+Vsw6sb8LfhJcsw5TPKtmIG86m1LcZjb6cwlEAredWRKQip\nkQ==\n-----END CERTIFICATE-----",
+    "organName": "zp",
+    "appName": "second-hand"
   }
 }
